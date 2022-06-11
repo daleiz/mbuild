@@ -1,0 +1,7 @@
+(library
+ (name obuild))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -a))))
