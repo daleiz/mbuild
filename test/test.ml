@@ -37,11 +37,23 @@ let test1 () =
   let open Alcotest in
   let () = check string "same line1" expect_line1 line1 in
   let () = check string "same line2" expect_line2 line2 in
-  let () = check bool "rebuild" false (B.need_rebuild res mbuild) in
+  let () = check bool "don't need rebuild" false (B.need_rebuild res mbuild) in
 
+  let () = Unix.sleep 1 in
   let expect_line1 = "xxx" in
   let () = write_str file1 (expect_line1 ^ "\n") in
-  let () = check bool "" true (B.need_rebuild res mbuild) in
+  let () = check bool "need rebuild" true (B.need_rebuild res mbuild) in
+  let () = B.build res mbuild in
+  let ic = open_in res in
+  let line1 = input_line ic in
+  let () = check string "" expect_line1 line1 in
+
+  let phony = ".clean" in
+  let rule = R.create (R.Phony phony) ~cmds:[ "rm " ^ res ] in
+  let mbuild = B.add_rule rule mbuild in
+  let () = B.build phony mbuild in
+  let () = check bool "phony done" false (Sys.file_exists res) in
+  let () = check bool "need rebuild" true (B.need_rebuild res mbuild) in
   let () = B.build res mbuild in
   let ic = open_in res in
   let line1 = input_line ic in

@@ -1,8 +1,7 @@
 type t = (string * Rule.t) list
 
-let create rules =
-  let f acc r = List.append acc [ (Rule.target r, r) ] in
-  List.fold_left f [] rules
+let add_rule rule t = List.append t [ (Rule.target rule, rule) ]
+let create rules = List.fold_left (fun t r -> add_rule r t) [] rules
 
 let run_cmd cmd =
   let () = print_endline ("[Build]: " ^ cmd) in
@@ -13,7 +12,7 @@ let need_rebuild target t =
     match List.assoc_opt trgt t with
     | None ->
         let f_mtime = (Unix.stat trgt).st_mtime in
-        if f_mtime >= mtime then true else false
+        if f_mtime > mtime then true else false
     | Some rule -> (
         match Rule.deps rule with
         | [] -> true
