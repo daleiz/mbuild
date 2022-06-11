@@ -1,5 +1,6 @@
 module B = Mbuild.Build
 module R = Mbuild.Rule
+module C = Mbuild.Cmd
 
 let rand_chr () = Char.chr (97 + Random.int 26)
 
@@ -27,7 +28,7 @@ let test1 () =
   let cmd2 = [ "cat"; file2; ">>"; res1 ] in
   let rule =
     R.create (R.File res1) ~deps:[ file1; file2 ]
-      ~cmds:[ String.concat " " cmd1; String.concat " " cmd2 ]
+      ~cmds:[ C.make cmd1; C.make cmd2 ]
   in
   let mbuild = B.create [ rule ] in
   let () = B.build res1 mbuild in
@@ -51,7 +52,7 @@ let test1 () =
   let () = check string "line1 same" expect_line1 line1 in
 
   let clean_res1 = ".clean_res1" in
-  let rule = R.create (R.Phony clean_res1) ~cmds:[ "rm " ^ res1 ] in
+  let rule = R.create (R.Phony clean_res1) ~cmds:[ C.make [ "rm"; res1 ] ] in
   let mbuild = B.add_rule rule mbuild in
   let () = B.build clean_res1 mbuild in
   let () = check bool "phony done" false (Sys.file_exists res1) in
@@ -64,7 +65,7 @@ let test1 () =
 
   let res2 = Filename.concat dir (rand_str 7) in
   let rule =
-    R.create (R.File res2) ~deps:[ res1 ] ~cmds:[ "cp " ^ res1 ^ " " ^ res2 ]
+    R.create (R.File res2) ~deps:[ res1 ] ~cmds:[ C.make [ "cp"; res1; res2 ] ]
   in
   let mbuild = B.add_rule rule mbuild in
   let () = B.build res2 mbuild in
