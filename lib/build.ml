@@ -1,7 +1,8 @@
 type t = (string * Rule.t) list
 
-let create () = []
-let add_rule rule t = List.append t [ (Rule.target rule, rule) ]
+let create rules =
+  let f acc r = List.append acc [ (Rule.target r, r) ] in
+  List.fold_left f [] rules
 
 let run_cmd cmd =
   let () = print_endline ("[Build]: " ^ cmd) in

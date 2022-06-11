@@ -1,6 +1,6 @@
 (lang dune 3.2)
 
-(name obuild)
+(name mbuild)
 
 (generate_opam_files true)
 
@@ -16,7 +16,7 @@
 (documentation https://url/to/documentation)
 
 (package
- (name obuild)
+ (name mbuild)
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends ocaml dune)

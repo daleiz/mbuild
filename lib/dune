@@ -1,5 +1,7 @@
 (library
- (name obuild))
+ (name mbuild)
+ (public_name mbuild)
+ (libraries unix))
 
 (env
  (dev

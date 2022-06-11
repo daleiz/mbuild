@@ -1,2 +1,3 @@
 (test
- (name obuild))
+ (name test)
+ (libraries mbuild alcotest unix))
