@@ -38,8 +38,14 @@ let test1 () =
   let () = check string "same line1" expect_line1 line1 in
   let () = check string "same line2" expect_line2 line2 in
   let () = check bool "rebuild" false (B.need_rebuild res mbuild) in
-  let () = write_str file1 ("xxx" ^ "\n") in
+
+  let expect_line1 = "xxx" in
+  let () = write_str file1 (expect_line1 ^ "\n") in
   let () = check bool "" true (B.need_rebuild res mbuild) in
+  let () = B.build res mbuild in
+  let ic = open_in res in
+  let line1 = input_line ic in
+  let () = check string "" expect_line1 line1 in
 
   ()
 
