@@ -1,6 +1,7 @@
 module B = Mbuild.Build
 module R = Mbuild.Rule
 module C = Mbuild.Cmd
+module Cf = Mbuild.Cfun
 
 let rand_chr () = Char.chr (97 + Random.int 26)
 
@@ -98,11 +99,8 @@ let test1 () =
 
   ()
 
-let test_ninja () =
-  let dir = mk_temp_dir () in
-  let () = print_endline dir in
-  let hello_c_file = Filename.concat dir "hello.c" in
-  let hello_c =
+let gen_simple_c_prog src_file =
+  let src =
     {|
   #include "stdio.h"
   int main() {
@@ -110,7 +108,14 @@ let test_ninja () =
   }
   |}
   in
-  let () = write_str hello_c_file hello_c in
+  let () = write_str src_file src in
+  ()
+
+let test_ninja () =
+  let dir = mk_temp_dir () in
+  let () = print_endline dir in
+  let hello_c_file = Filename.concat dir "hello.c" in
+  let () = gen_simple_c_prog hello_c_file in
 
   let r_build_dir = "_ninja_build" in
   let r_hello_exe_file = Filename.concat r_build_dir "hello" in
@@ -121,7 +126,7 @@ let test_ninja () =
   in
   let mbuild = B.create [ rule ] in
   let () = B.ninja mbuild ~output_dir:dir in
-  (* let () = Unix.sleep 1 in *)
+  (* let () = Unix.sleep 10000 in *)
   let () = C.run (C.concat [ C.make [ "cd"; dir ]; C.make [ "ninja" ] ]) in
 
   let open Alcotest in
@@ -132,10 +137,35 @@ let test_ninja () =
 
   ()
 
+let test_cfun1 () =
+  let dir = mk_temp_dir () in
+  let () = print_endline dir in
+  let src = "hello.c" in
+  let src_file = Filename.concat dir src in
+  let () = gen_simple_c_prog src_file in
+
+  let exe = "hello" in
+  let r_bin_dir = "_ninja_build/bin" in
+  let r_exe_file = Filename.concat r_bin_dir exe in
+  let rules = Cf.exe [ src ] exe in
+  let mbuild = B.create rules in
+  let () = B.ninja mbuild ~output_dir:dir in
+  let () = C.run (C.concat [ C.make [ "cd"; dir ]; C.make [ "ninja" ] ]) in
+
+  (* let () = Unix.sleep 10000 in  *)
+  let open Alcotest in
+  let () =
+    check bool "build success" true
+      (Sys.file_exists (Filename.concat dir r_exe_file))
+  in
+
+  ()
+
 let () =
   let open Alcotest in
   run "tests"
     [
       ("basic", [ test_case "basic1" `Quick test1 ]);
       ("ninja", [ test_case "ninja1" `Quick test_ninja ]);
+      ("cfun", [ test_case "cfun1" `Quick test_cfun1 ]);
     ]
