@@ -44,6 +44,6 @@ let shared_lib ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build")
   shared_common ~cc ~cflags ~build_dir ~ldflags ~libs srcs tn
 
 let exe ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build")
-    ?(ldflags = [ "" ]) ?(libs = [ "c" ]) srcs name =
+    ?(ldflags = [ "" ]) ?(libs = []) srcs name =
   let tn = Filename.concat (Filename.concat build_dir "bin") name in
   shared_common ~cc ~cflags ~build_dir ~ldflags ~libs srcs tn
