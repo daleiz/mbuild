@@ -2,6 +2,7 @@ module B = Mbuild.Build
 module R = Mbuild.Rule
 module C = Mbuild.Cmd
 module Cf = Mbuild.Cfun
+module Cx = Mbuild.Cxxfun
 
 let rand_chr () = Char.chr (97 + Random.int 26)
 
@@ -161,6 +162,42 @@ let test_cfun1 () =
 
   ()
 
+let gen_simple_cxx_prog src_file =
+  let src =
+    {|
+  #include <iostream>"
+  int main() {
+    std::cout << "hello world!" << std::endl;
+  }
+  |}
+  in
+  let () = write_str src_file src in
+  ()
+
+let test_cxxfun1 () =
+  let dir = mk_temp_dir () in
+  let () = print_endline dir in
+  let src = "hello.cc" in
+  let src_file = Filename.concat dir src in
+  let () = gen_simple_cxx_prog src_file in
+
+  let exe = "hello" in
+  let r_bin_dir = "_ninja_build/bin" in
+  let r_exe_file = Filename.concat r_bin_dir exe in
+  let rules = Cx.exe [ src ] exe in
+  let mbuild = B.create rules in
+  let () = B.ninja mbuild ~output_dir:dir in
+  let () = C.run (C.concat [ C.make [ "cd"; dir ]; C.make [ "ninja" ] ]) in
+
+  (* let () = Unix.sleep 10000 in  *)
+  let open Alcotest in
+  let () =
+    check bool "build success" true
+      (Sys.file_exists (Filename.concat dir r_exe_file))
+  in
+
+  ()
+
 let () =
   let open Alcotest in
   run "tests"
@@ -168,4 +205,5 @@ let () =
       ("basic", [ test_case "basic1" `Quick test1 ]);
       ("ninja", [ test_case "ninja1" `Quick test_ninja ]);
       ("cfun", [ test_case "cfun1" `Quick test_cfun1 ]);
+      ("cxxfun", [ test_case "cxxfun1" `Quick test_cxxfun1 ]);
     ]
