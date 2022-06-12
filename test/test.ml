@@ -13,9 +13,13 @@ let write_str file str =
   let () = output_string oc str in
   close_out oc
 
+let mk_temp_dir () =
+  let dir = Filename.concat (Filename.get_temp_dir_name ()) (rand_str 7) in
+  let () = Unix.mkdir dir 0o775 in
+  dir
+
 let test1 () =
-  let dir = Filename.get_temp_dir_name () in
-  (* let () = Unix.mkdir dir 0o775 in *)
+  let dir = mk_temp_dir () in
   let file1 = Filename.concat dir (rand_str 7) in
   let expect_line1 = "hello" in
   let expect_line2 = "world" in
@@ -95,7 +99,7 @@ let test1 () =
   ()
 
 let test_ninja () =
-  let dir = Filename.get_temp_dir_name () in
+  let dir = mk_temp_dir () in
   let () = print_endline dir in
   let hello_c_file = Filename.concat dir "hello.c" in
   let hello_c =
