@@ -5,7 +5,7 @@ let create rules = List.fold_left (fun t r -> add_rule r t) [] rules
 
 let run_cmd cmd =
   let () = print_endline ("[Build]: " ^ cmd) in
-  match Sys.command cmd with 0 -> () | _ -> failwith "run cmd error"
+  Cmd.run cmd
 
 let need_rebuild target t =
   let rec f mtime trgt =
@@ -38,3 +38,80 @@ let rec build target t =
       let () = List.iter (fun trgt -> build trgt t) deps in
       let cmds = Rule.cmds rule in
       List.iter run_cmd cmds
+
+type ninja_rule = {
+  name : string;
+  command : string;
+  variables : (string * string) list;
+}
+
+type ninja_build = {
+  output : string;
+  rule : string;
+  inputs : string list;
+  variables : (string * string) list;
+}
+
+let add_scoped_kvs_str s kvs =
+  List.fold_left
+    (fun acc (k, v) ->
+      let ps = Printf.sprintf "\n  %s = %s" k v in
+      acc ^ ps)
+    s kvs
+
+let ninja_rule_to_str nr =
+  let s = Printf.sprintf "rule %s\n  command = %s" nr.name nr.command in
+  add_scoped_kvs_str s nr.variables
+
+let ninja_build_to_str nb =
+  let s = Printf.sprintf "build %s: %s" nb.output nb.rule in
+  let s =
+    List.fold_left
+      (fun acc i ->
+        let is = Printf.sprintf " %s" i in
+        acc ^ is)
+      s nb.inputs
+  in
+  add_scoped_kvs_str s nb.variables
+
+let gen_ninja_rule_name r =
+  let s =
+    String.map
+      (fun c ->
+        if String.equal (String.make 1 c) Filename.dir_sep then '_' else c)
+      (Rule.target r)
+  in
+  "rule__" ^ s
+
+let rule_to_ninja r =
+  let nr : ninja_rule =
+    {
+      name = gen_ninja_rule_name r;
+      command = Cmd.concat (Rule.cmds r);
+      variables = [];
+    }
+  in
+  let nb : ninja_build =
+    {
+      output = Rule.target r;
+      rule = nr.name;
+      inputs = Rule.deps r;
+      variables = [];
+    }
+  in
+  (nr, nb)
+
+let rule_to_ninja_str r =
+  let nr, nb = rule_to_ninja r in
+  ninja_rule_to_str nr ^ "\n\n" ^ ninja_build_to_str nb
+
+let ninja ?(build_dir = "_ninja_build")
+    ?(output_dir = Filename.current_dir_name) t =
+  let output_file = Filename.concat output_dir "build.ninja" in
+  let oc = open_out output_file in
+  let () = output_string oc (Printf.sprintf "builddir = %s" build_dir) in
+  let () =
+    List.iter (fun (_, r) -> output_string oc ("\n\n" ^ rule_to_ninja_str r)) t
+  in
+  let () = output_string oc "\n" in
+  close_out oc

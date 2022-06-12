@@ -94,6 +94,44 @@ let test1 () =
 
   ()
 
+let test_ninja () =
+  let dir = Filename.get_temp_dir_name () in
+  let () = print_endline dir in
+  let hello_c_file = Filename.concat dir "hello.c" in
+  let hello_c =
+    {|
+  #include "stdio.h"
+  int main() {
+    printf("hello world!\n");
+  }
+  |}
+  in
+  let () = write_str hello_c_file hello_c in
+
+  let r_build_dir = "_ninja_build" in
+  let r_hello_exe_file = Filename.concat r_build_dir "hello" in
+  let r_hello_c_file = "hello.c" in
+  let rule =
+    R.create (R.File r_hello_exe_file) ~deps:[ r_hello_c_file ]
+      ~cmds:[ C.make [ "gcc"; r_hello_c_file; "-o"; r_hello_exe_file ] ]
+  in
+  let mbuild = B.create [ rule ] in
+  let () = B.ninja mbuild ~output_dir:dir in
+  (* let () = Unix.sleep 1 in *)
+  let () = C.run (C.concat [ C.make [ "cd"; dir ]; C.make [ "ninja" ] ]) in
+
+  let open Alcotest in
+  let () =
+    check bool "build success" true
+      (Sys.file_exists (Filename.concat dir r_hello_exe_file))
+  in
+
+  ()
+
 let () =
   let open Alcotest in
-  run "tests" [ ("basic", [ test_case "basic1" `Quick test1 ]) ]
+  run "tests"
+    [
+      ("basic", [ test_case "basic1" `Quick test1 ]);
+      ("ninja", [ test_case "ninja1" `Quick test_ninja ]);
+    ]
