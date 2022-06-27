@@ -5,22 +5,17 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github noomettib/mbuild))
 
-(authors "Author Name")
+(authors "noomettib")
 
-(maintainers "Maintainer Name")
+(maintainers "noomettib")
 
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(license BSD3)
 
 (package
  (name mbuild)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "A build system")
+ (description "A simple build system")
  (depends ocaml dune)
- (tags
-  (topics "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
+  )
