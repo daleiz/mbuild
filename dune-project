@@ -11,7 +11,7 @@
 
 (maintainers "noomettib")
 
-(license BSD3)
+(license Apache-2.0)
 
 (package
  (name mbuild)

@@ -4,7 +4,7 @@ synopsis: "A build system"
 description: "A simple build system"
 maintainer: ["noomettib"]
 authors: ["noomettib"]
-license: "BSD3"
+license: "Apache-2.0"
 homepage: "https://github.com/noomettib/mbuild"
 bug-reports: "https://github.com/noomettib/mbuild/issues"
 depends: [
