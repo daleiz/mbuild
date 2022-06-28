@@ -11,7 +11,7 @@ let objs ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build") srcs =
 
 let static_lib_from_objs ?(build_dir = "_ninja_build") objs name =
   let lib_name = "lib" ^ name ^ ".a" in
-  let tn = Filename.concat (Filename.concat build_dir "lib") lib_name in
+  let tn = Filename.concat build_dir lib_name in
   let cmd = Cmd.make (List.append [ "ar"; "rcs"; tn ] objs) in
   Rule.create (Rule.File tn) ~deps:objs ~cmds:[ cmd ]
 
@@ -39,11 +39,11 @@ let shared_common ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build")
 let shared_lib ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build")
     ?(ldflags = []) ?(libs = []) srcs name =
   let lib_name = "lib" ^ name ^ ".so" in
-  let tn = Filename.concat (Filename.concat build_dir "lib") lib_name in
+  let tn = Filename.concat build_dir lib_name in
   let ldflags = List.append ldflags [ "-shared" ] in
   shared_common ~cc ~cflags ~build_dir ~ldflags ~libs srcs tn
 
 let exe ?(cc = "gcc") ?(cflags = []) ?(build_dir = "_ninja_build")
     ?(ldflags = [ "" ]) ?(libs = []) srcs name =
-  let tn = Filename.concat (Filename.concat build_dir "bin") name in
+  let tn = Filename.concat build_dir name in
   shared_common ~cc ~cflags ~build_dir ~ldflags ~libs srcs tn
