@@ -21,6 +21,14 @@ let create_m ?(deps = []) ?(cmds = []) targets =
   let rs = List.map f tl in
   List.append [ r0 ] rs
 
+let add_deps r deps =
+  {
+    target = r.target;
+    is_phony = r.is_phony;
+    deps = List.append deps r.deps;
+    cmds = r.cmds;
+  }
+
 let target t = t.target
 let is_target_phony t = t.is_phony
 let deps t = t.deps
