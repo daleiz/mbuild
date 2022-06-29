@@ -84,26 +84,39 @@ let gen_ninja_rule_name r =
   "rule__" ^ s
 
 let rule_to_ninja r =
-  let nr : ninja_rule =
-    {
-      name = gen_ninja_rule_name r;
-      command = Cmd.concat (Rule.cmds r);
-      variables = [];
-    }
-  in
-  let nb : ninja_build =
-    {
-      output = Rule.target r;
-      rule = nr.name;
-      inputs = Rule.deps r;
-      variables = [];
-    }
-  in
-  (nr, nb)
+  if Rule.is_target_phony r then
+    let nb : ninja_build =
+      {
+        output = Rule.target r;
+        rule = "phony";
+        inputs = Rule.deps r;
+        variables = [];
+      }
+    in
+    (None, nb)
+  else
+    let nr : ninja_rule =
+      {
+        name = gen_ninja_rule_name r;
+        command = Cmd.concat (Rule.cmds r);
+        variables = [];
+      }
+    in
+    let nb : ninja_build =
+      {
+        output = Rule.target r;
+        rule = nr.name;
+        inputs = Rule.deps r;
+        variables = [];
+      }
+    in
+    (Some nr, nb)
 
 let rule_to_ninja_str r =
-  let nr, nb = rule_to_ninja r in
-  ninja_rule_to_str nr ^ "\n\n" ^ ninja_build_to_str nb
+  let onr, nb = rule_to_ninja r in
+  match onr with
+  | Some nr -> ninja_rule_to_str nr ^ "\n\n" ^ ninja_build_to_str nb
+  | None -> ninja_build_to_str nb
 
 let ninja ?(build_dir = "_ninja_build")
     ?(output_dir = Filename.current_dir_name) t =
