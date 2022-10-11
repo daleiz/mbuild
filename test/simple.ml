@@ -146,14 +146,14 @@ let test_cfun1 () =
   let () = gen_simple_c_prog src_file in
 
   let exe = "hello" in
-  let r_bin_dir = "_ninja_build/bin" in
+  let r_bin_dir = "_ninja_build" in
   let r_exe_file = Filename.concat r_bin_dir exe in
   let rules = Cf.exe [ src ] exe in
   let mbuild = B.create rules in
   let () = B.ninja mbuild ~output_dir:dir in
   let () = C.run (C.concat [ C.make [ "cd"; dir ]; C.make [ "ninja" ] ]) in
 
-  (* let () = Unix.sleep 10000 in  *)
+  (* let () = Unix.sleep 10000 in *)
   let open Alcotest in
   let () =
     check bool "build success" true
@@ -182,7 +182,7 @@ let test_cxxfun1 () =
   let () = gen_simple_cxx_prog src_file in
 
   let exe = "hello" in
-  let r_bin_dir = "_ninja_build/bin" in
+  let r_bin_dir = "_ninja_build" in
   let r_exe_file = Filename.concat r_bin_dir exe in
   let rules = Cx.exe [ src ] exe in
   let mbuild = B.create rules in

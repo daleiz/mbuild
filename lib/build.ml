@@ -46,7 +46,7 @@ type ninja_rule = {
 }
 
 type ninja_build = {
-  output : string;
+  outputs : string list;
   rule : string;
   inputs : string list;
   variables : (string * string) list;
@@ -64,7 +64,8 @@ let ninja_rule_to_str nr =
   add_scoped_kvs_str s nr.variables
 
 let ninja_build_to_str nb =
-  let s = Printf.sprintf "build %s: %s" nb.output nb.rule in
+  let outputs_str = String.concat " " nb.outputs in
+  let s = Printf.sprintf "build %s: %s" outputs_str nb.rule in
   let s =
     List.fold_left
       (fun acc i ->
@@ -87,7 +88,7 @@ let rule_to_ninja r =
   if Rule.is_target_phony r then
     let nb : ninja_build =
       {
-        output = Rule.target r;
+        outputs = Rule.targets r;
         rule = "phony";
         inputs = Rule.deps r;
         variables = [];
@@ -104,7 +105,7 @@ let rule_to_ninja r =
     in
     let nb : ninja_build =
       {
-        output = Rule.target r;
+        outputs = Rule.targets r;
         rule = nr.name;
         inputs = Rule.deps r;
         variables = [];
