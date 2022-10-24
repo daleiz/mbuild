@@ -121,11 +121,16 @@ let rule_to_ninja_str r =
 
 let ninja ?(build_dir = "_ninja_build")
     ?(output_dir = Filename.current_dir_name) t =
+  let rules_without_duplicate =
+    List.sort_uniq (fun (a, _) (b, _) -> String.compare a b) t
+  in
   let output_file = Filename.concat output_dir "build.ninja" in
   let oc = open_out output_file in
   let () = output_string oc (Printf.sprintf "builddir = %s" build_dir) in
   let () =
-    List.iter (fun (_, r) -> output_string oc ("\n\n" ^ rule_to_ninja_str r)) t
+    List.iter
+      (fun (_, r) -> output_string oc ("\n\n" ^ rule_to_ninja_str r))
+      rules_without_duplicate
   in
   let () = output_string oc "\n" in
   close_out oc
