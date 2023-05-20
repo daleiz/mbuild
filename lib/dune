@@ -1,7 +1,9 @@
 (library
  (name mbuild)
  (public_name mbuild)
- (libraries unix))
+ (libraries unix yojson ppx_deriving_yojson.runtime)
+ (preprocess
+  (pps ppx_deriving_yojson)))
 
 (env
  (dev

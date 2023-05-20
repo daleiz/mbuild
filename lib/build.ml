@@ -134,3 +134,57 @@ let ninja ?(build_dir = "_ninja_build")
   in
   let () = output_string oc "\n" in
   close_out oc
+
+type compdb_entry = { directory : string; file : string; command : string }
+[@@deriving yojson]
+
+type compdb = compdb_entry list [@@deriving yojson]
+
+let compdb ?(output_dir = Filename.current_dir_name) t =
+  let cunits =
+    List.filter
+      (fun (n, r) ->
+        (not (Rule.is_target_phony r))
+        && List.length (Rule.targets r) == 1
+        && String.ends_with ~suffix:".o" n)
+      t
+  in
+  let db =
+    List.fold_left
+      (fun prev (n, r) ->
+        let ds = String.split_on_char '/' n in
+        let () = assert (List.length ds > 2) in
+        let rs = List.tl (List.tl ds) in
+        let obj = String.concat "/" rs in
+        let obj_bytes = Bytes.of_string obj in
+        let nb = Bytes.sub obj_bytes 0 (String.length obj - 1) in
+        let fo =
+          List.fold_left
+            (fun a b ->
+              if Option.is_some a then a
+              else
+                let fs = String.of_bytes (Bytes.cat nb (Bytes.of_string b)) in
+                if Sys.file_exists fs then Option.some fs else Option.none)
+            Option.none
+            [ "c"; "cpp"; "cc"; "cxx" ]
+        in
+        let dir = Unix.getcwd () in
+        match fo with
+        | Option.None -> raise Not_found
+        | Option.Some f ->
+            List.append prev
+              [
+                {
+                  directory = dir;
+                  file = f;
+                  command = Cmd.concat (Rule.cmds r);
+                };
+              ])
+      [] cunits
+  in
+  let str = Yojson.Safe.to_string (compdb_to_yojson db) in
+  let output_file = Filename.concat output_dir "compile_commands.json" in
+  let oc = open_out output_file in
+  let () = output_string oc str in
+  let () = close_out oc in
+  ()
